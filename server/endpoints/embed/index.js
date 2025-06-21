@@ -25,6 +25,7 @@ function embeddedEndpoints(app) {
         const {
           sessionId,
           message,
+          context = null, // NEW: Optional user context
           // optional keys for override of defaults if enabled.
           prompt = null,
           model = null,
@@ -38,12 +39,19 @@ function embeddedEndpoints(app) {
         response.setHeader("Connection", "keep-alive");
         response.flushHeaders();
 
-        await streamChatWithForEmbed(response, embed, message, sessionId, {
-          prompt,
-          model,
-          temperature,
-          username,
-        });
+        await streamChatWithForEmbed(
+          response,
+          embed,
+          message,
+          sessionId,
+          context,
+          {
+            promptOverride: prompt,
+            model,
+            temperature,
+            username,
+          }
+        );
         await Telemetry.sendTelemetry("embed_sent_chat", {
           multiUserMode: multiUserMode(response),
           LLMSelection: process.env.LLM_PROVIDER || "openai",

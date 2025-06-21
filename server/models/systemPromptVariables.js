@@ -74,6 +74,7 @@ const SystemPromptVariables = {
       type: "user",
       multiUserRequired: true,
     },
+    // fixme: add user.context variable which will be populated with the embed data-context (embed model property "context") property.
   ],
 
   /**

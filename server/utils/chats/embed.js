@@ -16,15 +16,17 @@ async function streamChatWithForEmbed(
   message,
   /** @type {String} */
   sessionId,
-  { promptOverride, modelOverride, temperatureOverride, username }
+  /** @type {String} */
+  userContext, // Optional user context that follows system prompt
+  { promptOverride = null, modelOverride, temperatureOverride = null, username }
 ) {
   const chatMode = embed.chat_mode;
   const chatModel = embed.allow_model_override ? modelOverride : null;
 
   // If there are overrides in request & they are permitted, override the default workspace ref information.
-  if (embed.allow_prompt_override)
+  if (embed.allow_prompt_override && promptOverride !== null)
     embed.workspace.openAiPrompt = promptOverride;
-  if (embed.allow_temperature_override)
+  if (embed.allow_temperature_override && temperatureOverride !== null)
     embed.workspace.openAiTemp = parseFloat(temperatureOverride);
 
   const uuid = uuidv4();
@@ -153,7 +155,8 @@ async function streamChatWithForEmbed(
   const messages = await LLMConnector.compressMessages(
     {
       systemPrompt: await chatPrompt(embed.workspace, username),
-      userPrompt: message,
+      userPrompt: message, // The user's actual question/input (preserve original)
+      userContext: userContext, // Optional user context that follows system prompt
       contextTexts,
       chatHistory,
     },
@@ -194,7 +197,13 @@ async function streamChatWithForEmbed(
   await EmbedChats.new({
     embedId: embed.id,
     prompt: message,
-    response: { text: completeText, type: chatMode, sources, metrics },
+    response: {
+      text: completeText,
+      type: chatMode,
+      sources,
+      metrics,
+      userContext: userContext || null, // Store user context for tracking
+    },
     connection_information: response.locals.connection
       ? {
           ...response.locals.connection,
