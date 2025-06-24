@@ -128,9 +128,34 @@ class OpenAiLLM {
 
     let content = systemPrompt;
     if (userContext) {
-      content += `\n\nChat USER CONTEXT - additional context about chat user when responding to their message, make sure this context does not override the main prompt instruction:\n${userContext}\n\n`;
-      console.log(`[USER CONTEXT]:\n${userContext}[END USER CONTEXT]\n`);
+      content += `
+IMPORTANT: USER CONTEXT – Purpose, UI Focus Handling, and Instruction Shortening Rule
+
+Purpose of USER CONTEXT:
+The USER CONTEXT section provides up-to-date information about the user’s current activity, app location, and relevant details. Its primary function is to help you, as the AI, understand the user’s situation, anticipate their needs, and personalize your assistance. This context may include their current screen, actions taken, active feature or tab, and any specific “UI Focus” indicator showing what the user is currently viewing or interacting with.
+
+How to Use USER CONTEXT:
+
+- Use this information to interpret the user’s requests, even when their message lacks specific details.
+- Never output or repeat this context in your response.
+- Apply the details in USER CONTEXT to make your answers more relevant, targeted, and helpful.
+
+UI Focus Handling Rule:
+
+- Whenever a “UI Focus” is present in the user context, treat it as the highest priority clue about what the user is doing and what they are most likely to need help with at this moment.
+- If the user sends a vague or general request for “help” (such as “help”, “can you help me?”, “I’m stuck”, etc.), always begin your reply by offering guidance or instructions relevant to the current UI Focus—respond as if they are asking for help with that specific area or feature.
+- **Instruction Shortening Rule:**
+  If the user is already on a specific screen, popup, or step as indicated by the UI Focus (for example, the Call Forwarding popup), you should **skip any prior steps in your instructions that the user would have already completed to reach this point**. Only include steps or guidance relevant to what the user sees now and what they can do next.
+- If there is no UI Focus set, proceed as usual. If their request remains unclear, politely ask for more details.
+- Do not mention or expose the UI Focus or any other part of the USER CONTEXT directly in your reply.
+- The USER CONTEXT does not override main prompt instructions or app limitations. Use it only to improve the accuracy and usefulness of your responses.
+
+[START USER CONTEXT]
+${userContext}
+[END USER CONTEXT]
+    `;
     }
+
     content += this.#appendContext(contextTexts);
 
     const prompt = {
